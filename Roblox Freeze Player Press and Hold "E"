@@ -1,0 +1,57 @@
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
+local TRIGGER_KEY = Enum.KeyCode.E
+
+-- Helper function to send a standard Core notification
+local function sendStatusNotification(message)
+	StarterGui:SetCore("SendNotification", {
+		Title = "Interface Status",
+		Text = message,
+		Duration = 1.5
+	})
+end
+
+-- Function to handle when 'E' is pressed
+local function onInputBegan(input, gameProcessed)
+	if gameProcessed then return end -- Skips if typing in chat
+
+	if input.KeyCode == TRIGGER_KEY then
+		-- Freeze the player's character by anchoring the root part
+		local character = player.Character
+		if character then
+			local rootPart = character:FindFirstChild("HumanoidRootPart")
+			if rootPart then
+				rootPart.Anchored = true
+			end
+		end
+		
+		-- Display the activation notice
+		sendStatusNotification("tab active")
+	end
+end
+
+-- Function to handle when 'E' is released
+local function onInputEnded(input, gameProcessed)
+	-- We process this even if gameProcessed is true to ensure 
+	-- the player doesn't get permanently stuck if focus changes.
+	if input.KeyCode == TRIGGER_KEY then
+		-- Unfreeze the player's character
+		local character = player.Character
+		if character then
+			local rootPart = character:FindFirstChild("HumanoidRootPart")
+			if rootPart then
+				rootPart.Anchored = false
+			end
+		end
+		
+		-- Display the deactivation notice
+		sendStatusNotification("tab not active")
+	end
+end
+
+-- Connect the input listeners
+UserInputService.InputBegan:Connect(onInputBegan)
+UserInputService.InputEnded:Connect(onInputEnded)
