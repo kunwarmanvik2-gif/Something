@@ -1,0 +1,65 @@
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+local TOGGLE_KEY = Enum.KeyCode.T
+local noclipActive = false
+local connection = nil
+
+-- Function that turns off collision for every part of the character
+local function noclipLoop()
+	if not character then return end
+	
+	for _, part in ipairs(character:GetDescendants()) do
+		if part:IsA("BasePart") and part.CanCollide == true then
+			part.CanCollide = false
+		end
+	end
+end
+
+local function onInputBegan(input, gameProcessedEvent)
+	-- Ignore if typing in chat
+	if gameProcessedEvent then return end
+
+	if input.KeyCode == TOGGLE_KEY then
+		noclipActive = not noclipActive
+		
+		if noclipActive then
+			print("Noclip: ENABLED")
+			-- Connect to Stepped (fires right before physics are calculated every frame)
+			connection = RunService.Stepped:Connect(noclipLoop)
+		else
+			print("Noclip: DISABLED")
+			-- Disconnect the loop so physics return to normal
+			if connection then
+				connection:Disconnect()
+				connection = nil
+			end
+			
+			-- Instantly turn collisions back on for the main torso/legs
+			if character then
+				for _, part in ipairs(character:GetDescendants()) do
+					if part:IsA("BasePart") then
+						-- Roblox defaults standard parts to collide
+						part.CanCollide = true 
+					end
+				end
+			end
+		end
+	end
+end
+
+-- Reset script connections if the character respawns
+player.CharacterAdded:Connect(function(newCharacter)
+	character = newCharacter
+	noclipActive = false
+	if connection then
+		connection:Disconnect()
+		connection = nil
+	end
+end)
+
+UserInputService.InputBegan:Connect(onInputBegan)
