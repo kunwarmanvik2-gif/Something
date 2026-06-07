@@ -1,0 +1,272 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+--------------------------------------------------
+-- SETTINGS
+--------------------------------------------------
+
+local MIN_JUMP = 0
+local MAX_JUMP = 500
+local JumpPower = 250
+
+--------------------------------------------------
+-- GUI
+--------------------------------------------------
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SuperJumpGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+
+local Main = Instance.new("Frame")
+Main.Size = UDim2.new(0, 340, 0, 170)
+Main.Position = UDim2.new(0.5, -170, 0.7, 0)
+Main.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+Main.BorderSizePixel = 0
+Main.Parent = ScreenGui
+
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+
+--------------------------------------------------
+-- TITLE BAR
+--------------------------------------------------
+
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = Main
+
+Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 12)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 1, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "Super Jump"
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.Parent = TitleBar
+
+--------------------------------------------------
+-- JUMP POWER LABEL
+--------------------------------------------------
+
+local ValueLabel = Instance.new("TextLabel")
+ValueLabel.Size = UDim2.new(1, 0, 0, 20)
+ValueLabel.Position = UDim2.new(0, 0, 0, 40)
+ValueLabel.BackgroundTransparency = 1
+ValueLabel.Text = "Jump Power: " .. JumpPower
+ValueLabel.TextColor3 = Color3.new(1, 1, 1)
+ValueLabel.Font = Enum.Font.Gotham
+ValueLabel.TextSize = 14
+ValueLabel.Parent = Main
+
+--------------------------------------------------
+-- TEXTBOX
+--------------------------------------------------
+
+local JumpBox = Instance.new("TextBox")
+JumpBox.Size = UDim2.new(0, 120, 0, 30)
+JumpBox.Position = UDim2.new(0.5, -60, 0, 65)
+JumpBox.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+JumpBox.TextColor3 = Color3.new(1, 1, 1)
+JumpBox.Font = Enum.Font.Gotham
+JumpBox.TextSize = 14
+JumpBox.Text = tostring(JumpPower)
+JumpBox.ClearTextOnFocus = false
+JumpBox.PlaceholderText = "0 - 500"
+JumpBox.Parent = Main
+
+Instance.new("UICorner", JumpBox).CornerRadius = UDim.new(0, 8)
+
+--------------------------------------------------
+-- SLIDER
+--------------------------------------------------
+
+local SliderBG = Instance.new("Frame")
+SliderBG.Size = UDim2.new(0.85, 0, 0, 8)
+SliderBG.Position = UDim2.new(0.075, 0, 0, 115)
+SliderBG.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+SliderBG.BorderSizePixel = 0
+SliderBG.Parent = Main
+
+Instance.new("UICorner", SliderBG).CornerRadius = UDim.new(1, 0)
+
+local SliderFill = Instance.new("Frame")
+SliderFill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+SliderFill.BorderSizePixel = 0
+SliderFill.Parent = SliderBG
+
+Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
+
+local Knob = Instance.new("TextButton")
+Knob.Size = UDim2.new(0, 18, 0, 18)
+Knob.AnchorPoint = Vector2.new(0.5, 0.5)
+Knob.BackgroundColor3 = Color3.new(1, 1, 1)
+Knob.Text = ""
+Knob.BorderSizePixel = 0
+Knob.Parent = SliderBG
+
+Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
+
+--------------------------------------------------
+-- INFO LABEL
+--------------------------------------------------
+
+local Info = Instance.new("TextLabel")
+Info.Size = UDim2.new(1, 0, 0, 20)
+Info.Position = UDim2.new(0, 0, 1, -25)
+Info.BackgroundTransparency = 1
+Info.Text = "T = Jump | LeftCtrl = Hide GUI"
+Info.TextColor3 = Color3.fromRGB(180, 180, 180)
+Info.Font = Enum.Font.Gotham
+Info.TextSize = 12
+Info.Parent = Main
+
+--------------------------------------------------
+-- UPDATE FUNCTION
+--------------------------------------------------
+
+local function UpdateUI()
+	local percent = JumpPower / MAX_JUMP
+
+	SliderFill.Size = UDim2.new(percent, 0, 1, 0)
+	Knob.Position = UDim2.new(percent, 0, 0.5, 0)
+
+	ValueLabel.Text = "Jump Power: " .. JumpPower
+
+	if not JumpBox:IsFocused() then
+		JumpBox.Text = tostring(JumpPower)
+	end
+end
+
+UpdateUI()
+
+--------------------------------------------------
+-- DRAGGING
+--------------------------------------------------
+
+local draggingGUI = false
+local dragStart
+local startPos
+
+TitleBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		draggingGUI = true
+		dragStart = input.Position
+		startPos = Main.Position
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		draggingGUI = false
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if draggingGUI and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+
+		Main.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+--------------------------------------------------
+-- SLIDER LOGIC
+--------------------------------------------------
+
+local draggingSlider = false
+
+Knob.MouseButton1Down:Connect(function()
+	draggingSlider = true
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		draggingSlider = false
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local percent = math.clamp(
+			(input.Position.X - SliderBG.AbsolutePosition.X)
+			/ SliderBG.AbsoluteSize.X,
+			0,
+			1
+		)
+
+		JumpPower = math.floor(percent * MAX_JUMP)
+		UpdateUI()
+	end
+end)
+
+--------------------------------------------------
+-- TEXTBOX LOGIC
+--------------------------------------------------
+
+JumpBox.FocusLost:Connect(function()
+	local value = tonumber(JumpBox.Text)
+
+	if value then
+		value = math.clamp(math.floor(value), MIN_JUMP, MAX_JUMP)
+		JumpPower = value
+	end
+
+	UpdateUI()
+end)
+
+--------------------------------------------------
+-- HIDE / SHOW GUI
+--------------------------------------------------
+
+local Visible = true
+
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed then
+		return
+	end
+
+	if input.KeyCode == Enum.KeyCode.LeftControl then
+		Visible = not Visible
+		Main.Visible = Visible
+	end
+end)
+
+--------------------------------------------------
+-- SUPER JUMP
+--------------------------------------------------
+
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed then
+		return
+	end
+
+	if input.KeyCode == Enum.KeyCode.T then
+		local Character = Player.Character
+		if not Character then
+			return
+		end
+
+		local Root = Character:FindFirstChild("HumanoidRootPart")
+		if not Root then
+			return
+		end
+
+		Root.AssemblyLinearVelocity = Vector3.new(
+			Root.AssemblyLinearVelocity.X,
+			JumpPower,
+			Root.AssemblyLinearVelocity.Z
+		)
+	end
+end)
