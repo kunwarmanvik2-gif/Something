@@ -1,0 +1,111 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+-- This script made by V3ngu1m 
+-- Discord invate : .gg/zBAu4rXUd
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+
+pcall(function()
+	Lighting.GlobalShadows = false
+	Lighting.FogEnd = 1e9
+	Lighting.Brightness = 1
+	Lighting.Ambient = Color3.fromRGB(140,140,140)
+	Lighting.OutdoorAmbient = Color3.fromRGB(140,140,140)
+	Lighting.EnvironmentDiffuseScale = 0
+	Lighting.EnvironmentSpecularScale = 0
+end)
+
+for _,v in ipairs(Lighting:GetChildren()) do
+	if v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Sky") then
+		v:Destroy()
+	end
+end
+
+local sky = Instance.new("Sky")
+local SKY_ID = "rbxassetid://79747281250125"
+
+sky.SkyboxBk = SKY_ID
+sky.SkyboxDn = SKY_ID
+sky.SkyboxFt = SKY_ID
+sky.SkyboxLf = SKY_ID
+sky.SkyboxRt = SKY_ID
+sky.SkyboxUp = SKY_ID
+sky.SunAngularSize = 0
+sky.MoonAngularSize = 0
+sky.StarCount = 0
+sky.Parent = Lighting
+
+local function removeEffect(obj)
+	if obj:IsA("ParticleEmitter")
+	or obj:IsA("Trail")
+	or obj:IsA("Beam")
+	or obj:IsA("Explosion")
+	or obj:IsA("Smoke")
+	or obj:IsA("Fire") then
+		obj:Destroy()
+	end
+end
+
+local function cleanPart(part)
+	part.CastShadow = false
+	part.Reflectance = 0
+	part.Material = Enum.Material.Plastic
+	part.Color = Color3.fromRGB(150,150,150)
+end
+
+for _,obj in ipairs(Workspace:GetDescendants()) do
+	if obj:IsA("BasePart") then
+		cleanPart(obj)
+	elseif obj:IsA("Decal") or obj:IsA("Texture") then
+		obj:Destroy()
+	else
+		removeEffect(obj)
+	end
+end
+
+Workspace.DescendantAdded:Connect(function(obj)
+	if obj:IsA("BasePart") then
+		task.wait()
+		cleanPart(obj)
+	elseif obj:IsA("Decal") or obj:IsA("Texture") then
+		obj:Destroy()
+	else
+		removeEffect(obj)
+	end
+end)
+
+local function cleanCharacter(char)
+	for _,v in ipairs(char:GetDescendants()) do
+		if v:IsA("Shirt")
+		or v:IsA("Pants")
+		or v:IsA("ShirtGraphic") then
+			v:Destroy()
+		elseif v:IsA("Decal") and v.Name == "face" then
+			v:Destroy()
+		elseif v:IsA("BasePart") then
+			cleanPart(v)
+		elseif v:IsA("Accessory") then
+			local handle = v:FindFirstChild("Handle")
+			if handle and handle:IsA("BasePart") then
+				cleanPart(handle)
+			end
+		end
+	end
+end
+
+for _,plr in ipairs(Players:GetPlayers()) do
+	if plr.Character then
+		cleanCharacter(plr.Character)
+	end
+	plr.CharacterAdded:Connect(cleanCharacter)
+end
+
+for _,model in ipairs(Workspace:GetDescendants()) do
+	if model:IsA("Model") and model:FindFirstChildWhichIsA("Humanoid") then
+		cleanCharacter(model)
+	end
+end
+
+settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
